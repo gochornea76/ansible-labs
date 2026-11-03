@@ -1,0 +1,66 @@
+---
+# ==========================================
+# INVENTARIO DE APLICACIONES
+# ==========================================
+
+- hosts: servidores
+  gather_facts: false
+
+  tasks:
+
+    - name: Obtener hostname
+      raw: hostname
+      register: hostname
+
+    - name: Listar directorios en /usr/jboss
+      raw: |
+        if [ -d /usr/jboss ]; then
+          find /usr/jboss -maxdepth 1 -mindepth 1 -type d -exec basename {} \; | sort | paste -sd ';' -
+        else
+          echo "NO_EXISTE"
+        fi
+      register: jboss
+
+    - name: Listar archivos en /usr/lbin
+      raw: |
+        if [ -d /usr/lbin ]; then
+          ls -1 /usr/lbin | sort | paste -sd ';' -
+        else
+          echo "NO_EXISTE"
+        fi
+      register: lbin
+
+    - name: Guardar datos para CSV
+      set_fact:
+        host_name: "{{ hostname.stdout | trim }}"
+        jboss_dirs: "{{ jboss.stdout | trim }}"
+        lbin_files: "{{ lbin.stdout | trim }}"
+
+    - name: Mostrar resultado
+      debug:
+        msg:
+          - "HOST={{ host_name }}"
+          - "JBOSS={{ jboss_dirs }}"
+          - "LBIN={{ lbin_files }}"
+
+# ==========================================
+# GENERAR CSV
+# ==========================================
+
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+
+    - name: Generar CSV consolidado
+      copy:
+        dest: /tmp/inventario_aplicaciones.csv
+        content: |
+          IP,HOSTNAME,DIRECTORIOS_JBOSS,ARCHIVOS_LBIN
+          {% for host in groups['servidores'] %}
+          {{ host }},{{ hostvars[host]['host_name'] | default('N/A') }},{{ hostvars[host]['jboss_dirs'] | default('N/A') | replace(',', ';') }},{{ hostvars[host]['lbin_files'] | default('N/A') | replace(',', ';') }}
+          {% endfor %}
+
+    - name: Mostrar ubicacion CSV
+      debug:
+        msg: "Archivo generado: /tmp/inventario_aplicaciones.csv"
