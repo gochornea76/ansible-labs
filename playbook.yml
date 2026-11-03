@@ -1,6 +1,6 @@
----
-- hosts: servidores_prueba
+- hosts: all
   gather_facts: false
+  any_errors_fatal: false
   tasks:
     - name: Ping test directo sin Python
-      raw: echo "PONG - Servidor conectado correctamente!"
+      raw: echo "PONG - Servidor conectado correctamente"
