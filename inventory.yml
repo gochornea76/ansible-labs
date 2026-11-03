@@ -1,4 +1,3 @@
----
 - hosts: servidores
   gather_facts: false
 
@@ -10,11 +9,11 @@
     - raw: cat /etc/redhat-release
       register: so
 
-    - raw: df -h /
-      register: disk
+    - raw: df -h / | tail -1
+      register: disco
 
     - debug:
-        msg:
-          - "Host: {{ hostname.stdout }}"
-          - "SO: {{ so.stdout }}"
-          - "Disco: {{ disk.stdout_lines }}"
+        msg: |
+          | Host | Sistema Operativo | Disco Raíz |
+          |------|-------------------|------------|
+          | {{ hostname.stdout }} | {{ so.stdout }} | {{ disco.stdout }} |
