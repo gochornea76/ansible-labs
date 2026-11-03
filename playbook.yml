@@ -1,5 +1,5 @@
 ---
-- hosts: all
+- hosts: servidores_prueba
   gather_facts: false
   tasks:
     - name: Ping test directo sin Python
