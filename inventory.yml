@@ -6,12 +6,19 @@
 
     - name: Hostname
       raw: hostname
+      register: hostname_out
+
+    - name: Mostrar hostname
+      debug:
+        var: hostname_out.stdout
 
     - name: Version SO
       raw: cat /etc/redhat-release
+      register: so_out
+
+    - name: Mostrar SO
+      debug:
+        var: so_out.stdout
 
     - name: Uso disco
       raw: df -h /
-
-    - name: Memoria
-      raw: free -m
