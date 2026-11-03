@@ -1,0 +1,17 @@
+---
+- hosts: servidores
+  gather_facts: false
+
+  tasks:
+
+    - name: Hostname
+      raw: hostname
+
+    - name: Version SO
+      raw: cat /etc/redhat-release
+
+    - name: Uso disco
+      raw: df -h /
+
+    - name: Memoria
+      raw: free -m
