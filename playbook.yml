@@ -1,8 +1,11 @@
 ---
 - hosts: all
   gather_facts: false
-  vars:
-    ansible_python_interpreter: /usr/bin/python2.7
   tasks:
-    - name: Ping test
-      ping:
+    - name: Comprobar sistema y conectividad con raw
+      raw: uname -a && python --version
+      register: resultado
+
+    - name: Mostrar resultado en pantalla
+      debug:
+        msg: "{{ resultado.stdout }}"
