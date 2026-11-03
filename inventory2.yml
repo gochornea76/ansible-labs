@@ -1,16 +1,5 @@
 ---
-# Crear archivo CSV
-- hosts: localhost
-  gather_facts: false
-
-  tasks:
-    - name: Crear CSV
-      copy:
-        dest: /tmp/inventario_servidores.csv
-        content: |
-          IP,HOSTNAME,SO,DISCO_ROOT,MEM_TOTAL_MB,MEM_USED_MB,MEM_FREE_MB
-
-# Inventario servidores
+# Recolectar información de los servidores
 - hosts: servidores
   gather_facts: false
 
@@ -32,24 +21,40 @@
       raw: free -m | grep Mem
       register: memoria
 
+    - name: Guardar datos
+      set_fact:
+        host_name: "{{ hostname.stdout | trim }}"
+        host_so: "{{ so.stdout | trim }}"
+        host_disk: "{{ disco.stdout | trim }}"
+        mem_total: "{{ memoria.stdout.split()[1] }}"
+        mem_used: "{{ memoria.stdout.split()[2] }}"
+        mem_free: "{{ memoria.stdout.split()[3] }}"
+
     - name: Mostrar resumen
       debug:
         msg:
-          - "HOST={{ hostname.stdout | trim }}"
-          - "SO={{ so.stdout | trim }}"
-          - "DISCO_ROOT={{ disco.stdout | trim }}"
-          - "MEM_TOTAL_MB={{ memoria.stdout.split()[1] }}"
-          - "MEM_USED_MB={{ memoria.stdout.split()[2] }}"
-          - "MEM_FREE_MB={{ memoria.stdout.split()[3] }}"
+          - "HOST={{ host_name }}"
+          - "SO={{ host_so }}"
+          - "DISCO_ROOT={{ host_disk }}"
+          - "MEM_TOTAL_MB={{ mem_total }}"
+          - "MEM_USED_MB={{ mem_used }}"
+          - "MEM_FREE_MB={{ mem_free }}"
 
-    - name: Agregar fila CSV
-      delegate_to: localhost
-      lineinfile:
-        path: /tmp/inventario_servidores.csv
-        insertafter: EOF
-        create: yes
-        line: "{{ inventory_hostname | trim }},{{ hostname.stdout | trim }},{{ so.stdout | trim | replace(',', ';') }},{{ disco.stdout | trim }},{{ memoria.stdout.split()[1] }},{{ memoria.stdout.split()[2] }},{{ memoria.stdout.split()[3] }}"
+# Construir CSV consolidado
+- hosts: localhost
+  gather_facts: false
+
+  tasks:
+
+    - name: Generar CSV consolidado
+      copy:
+        dest: /tmp/inventario_servidores.csv
+        content: |
+          IP,HOSTNAME,SO,DISCO_ROOT,MEM_TOTAL_MB,MEM_USED_MB,MEM_FREE_MB
+          {% for host in groups['servidores'] %}
+          {{ host }},{{ hostvars[host]['host_name'] }},{{ hostvars[host]['host_so'] | replace(',', ';') }},{{ hostvars[host]['host_disk'] }},{{ hostvars[host]['mem_total'] }},{{ hostvars[host]['mem_used'] }},{{ hostvars[host]['mem_free'] }}
+          {% endfor %}
 
     - name: Mostrar ubicacion CSV
       debug:
-        msg: "Archivo actualizado: /tmp/inventario_servidores.csv"
+        msg: "Archivo generado: /tmp/inventario_servidores.csv"
