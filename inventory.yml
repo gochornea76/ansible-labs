@@ -4,21 +4,17 @@
 
   tasks:
 
-    - name: Hostname
-      raw: hostname
-      register: hostname_out
+    - raw: hostname
+      register: hostname
 
-    - name: Mostrar hostname
-      debug:
-        var: hostname_out.stdout
+    - raw: cat /etc/redhat-release
+      register: so
 
-    - name: Version SO
-      raw: cat /etc/redhat-release
-      register: so_out
+    - raw: df -h /
+      register: disk
 
-    - name: Mostrar SO
-      debug:
-        var: so_out.stdout
-
-    - name: Uso disco
-      raw: df -h /
+    - debug:
+        msg:
+          - "Host: {{ hostname.stdout }}"
+          - "SO: {{ so.stdout }}"
+          - "Disco: {{ disk.stdout_lines }}"
