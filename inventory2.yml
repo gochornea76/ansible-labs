@@ -1,5 +1,4 @@
 ---
-# Crear encabezado CSV una sola vez
 - hosts: localhost
   gather_facts: false
 
@@ -8,9 +7,8 @@
       copy:
         dest: /tmp/inventario_servidores.csv
         content: |
-          IP,HOSTNAME,SO,DISCO_ROOT,MEMORIA
+          IP,HOSTNAME,SO,DISCO_ROOT,MEM_TOTAL_MB,MEM_USED_MB,MEM_FREE_MB
 
-# Consultar servidores
 - hosts: servidores
   gather_facts: false
 
@@ -24,34 +22,24 @@
       raw: cat /etc/redhat-release
       register: so
 
-    - name: Disco raiz
-      raw: df -h / | tail -1
+    - name: Disco Root
+      raw: df -h / | tail -1 | awk '{print $5}'
       register: disco
 
     - name: Memoria
       raw: free -m | grep Mem
       register: memoria
 
-    - name: Mostrar resultado
+    - name: Mostrar resumen
       debug:
-        msg:
-          - "HOST={{ hostname.stdout }}"
-          - "SO={{ so.stdout }}"
-          - "DISCO={{ disco.stdout }}"
-          - "MEMORIA={{ memoria.stdout }}"
+        msg: |
+          Host: {{ hostname.stdout }}
+          SO: {{ so.stdout }}
+          Disco: {{ disco.stdout }}
+          Memoria: {{ memoria.stdout }}
 
     - name: Agregar fila CSV
       delegate_to: localhost
       lineinfile:
         path: /tmp/inventario_servidores.csv
-        create: yes
-        line: >-
-          {{ inventory_hostname }},
-          {{ hostname.stdout }},
-          {{ so.stdout | replace(',', ';') }},
-          {{ disco.stdout | replace(',', ';') }},
-          {{ memoria.stdout | replace(',', ';') }}
-
-    - name: Mostrar ubicacion reporte
-      debug:
-        msg: "CSV actualizado: /tmp/inventario_servidores.csv"
+        line: "{{ inventory_hostname }},{{ hostname.stdout }},{{ so.stdout | replace(',', ';') }},{{ disco.stdout }},{{ memoria.stdout.split()[1] }},{{ memoria.stdout.split()[2] }},{{ memoria.stdout.split()[3] }}"
