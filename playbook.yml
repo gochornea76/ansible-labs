@@ -1,5 +1,5 @@
 - hosts: servidores
   gather_facts: false
   tasks:
-    - name: Ping test directo sin Python
-      ping:
+    - name: Prueba sin Python
+      raw: hostname
