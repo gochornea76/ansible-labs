@@ -6,5 +6,5 @@
     - name: Hostname
       raw: hostname
 
-    - name: Date
+    - name: Fecha
       raw: date
