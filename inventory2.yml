@@ -1,4 +1,5 @@
 ---
+# Crear archivo CSV
 - hosts: localhost
   gather_facts: false
 
@@ -9,6 +10,7 @@
         content: |
           IP,HOSTNAME,SO,DISCO_ROOT,MEM_TOTAL_MB,MEM_USED_MB,MEM_FREE_MB
 
+# Inventario servidores
 - hosts: servidores
   gather_facts: false
 
@@ -32,14 +34,22 @@
 
     - name: Mostrar resumen
       debug:
-        msg: |
-          Host: {{ hostname.stdout }}
-          SO: {{ so.stdout }}
-          Disco: {{ disco.stdout }}
-          Memoria: {{ memoria.stdout }}
+        msg:
+          - "HOST={{ hostname.stdout | trim }}"
+          - "SO={{ so.stdout | trim }}"
+          - "DISCO_ROOT={{ disco.stdout | trim }}"
+          - "MEM_TOTAL_MB={{ memoria.stdout.split()[1] }}"
+          - "MEM_USED_MB={{ memoria.stdout.split()[2] }}"
+          - "MEM_FREE_MB={{ memoria.stdout.split()[3] }}"
 
     - name: Agregar fila CSV
       delegate_to: localhost
       lineinfile:
         path: /tmp/inventario_servidores.csv
-        line: "{{ inventory_hostname }},{{ hostname.stdout }},{{ so.stdout | replace(',', ';') }},{{ disco.stdout }},{{ memoria.stdout.split()[1] }},{{ memoria.stdout.split()[2] }},{{ memoria.stdout.split()[3] }}"
+        insertafter: EOF
+        create: yes
+        line: "{{ inventory_hostname | trim }},{{ hostname.stdout | trim }},{{ so.stdout | trim | replace(',', ';') }},{{ disco.stdout | trim }},{{ memoria.stdout.split()[1] }},{{ memoria.stdout.split()[2] }},{{ memoria.stdout.split()[3] }}"
+
+    - name: Mostrar ubicacion CSV
+      debug:
+        msg: "Archivo actualizado: /tmp/inventario_servidores.csv"
