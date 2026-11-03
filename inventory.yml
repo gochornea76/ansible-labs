@@ -1,3 +1,4 @@
+---
 - hosts: servidores
   gather_facts: false
 
@@ -13,7 +14,7 @@
       register: disco
 
     - debug:
-        msg: |
-          | Host | Sistema Operativo | Disco Raíz |
-          |------|-------------------|------------|
-          | {{ hostname.stdout }} | {{ so.stdout }} | {{ disco.stdout }} |
+        msg: >
+          HOST={{ hostname.stdout }}
+          | SO={{ so.stdout }}
+          | DISCO={{ disco.stdout }}
