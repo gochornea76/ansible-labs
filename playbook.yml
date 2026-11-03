@@ -3,4 +3,4 @@
   gather_facts: false
   tasks:
     - name: Ping test directo sin Python
-      raw: echo "PONG - Servidor conectado correctamente"
+      raw: echo "PONG - Servidor conectado correctamente!"
