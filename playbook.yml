@@ -2,8 +2,5 @@
   gather_facts: false
 
   tasks:
-    - name: Mostrar hostname
-      raw: hostname
-
-    - name: Mostrar fecha
-      raw: date
+    - debug:
+        msg: "Hola"
