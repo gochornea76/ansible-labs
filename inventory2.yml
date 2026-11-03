@@ -1,60 +1,100 @@
 ---
-# Recolectar información de los servidores
+# ==========================================
+# RECOLECCION DE INVENTARIO
+# ==========================================
 - hosts: servidores
   gather_facts: false
+  ignore_unreachable: true
 
   tasks:
+
+    - name: Fecha ejecucion
+      delegate_to: localhost
+      run_once: true
+      command: date "+%Y-%m-%d %H:%M:%S"
+      register: fecha_ejecucion
 
     - name: Hostname
       raw: hostname
       register: hostname
+      ignore_errors: true
 
     - name: Sistema Operativo
       raw: cat /etc/redhat-release
       register: so
+      ignore_errors: true
 
     - name: Disco Root
       raw: df -h / | tail -1 | awk '{print $5}'
       register: disco
+      ignore_errors: true
 
     - name: Memoria
       raw: free -m | grep Mem
       register: memoria
+      ignore_errors: true
 
-    - name: Guardar datos
+    - name: Servidor OK
       set_fact:
+        estado_host: "OK"
         host_name: "{{ hostname.stdout | trim }}"
         host_so: "{{ so.stdout | trim }}"
         host_disk: "{{ disco.stdout | trim }}"
         mem_total: "{{ memoria.stdout.split()[1] }}"
         mem_used: "{{ memoria.stdout.split()[2] }}"
         mem_free: "{{ memoria.stdout.split()[3] }}"
+      when:
+        - hostname is defined
+        - hostname.stdout is defined
+
+    - name: Servidor fallido
+      set_fact:
+        estado_host: "UNREACHABLE"
+        host_name: "N/A"
+        host_so: "N/A"
+        host_disk: "N/A"
+        mem_total: "N/A"
+        mem_used: "N/A"
+        mem_free: "N/A"
+      when:
+        - hostname is not defined or hostname.stdout is not defined
 
     - name: Mostrar resumen
       debug:
         msg:
-          - "HOST={{ host_name }}"
+          - "HOST={{ inventory_hostname }}"
+          - "ESTADO={{ estado_host }}"
+          - "HOSTNAME={{ host_name }}"
           - "SO={{ host_so }}"
-          - "DISCO_ROOT={{ host_disk }}"
-          - "MEM_TOTAL_MB={{ mem_total }}"
-          - "MEM_USED_MB={{ mem_used }}"
-          - "MEM_FREE_MB={{ mem_free }}"
 
-# Construir CSV consolidado
+# ==========================================
+# GENERAR CSV CONSOLIDADO
+# ==========================================
 - hosts: localhost
   gather_facts: false
 
   tasks:
 
+    - name: Obtener fecha CSV
+      command: date "+%Y-%m-%d %H:%M:%S"
+      register: fecha
+
     - name: Generar CSV consolidado
       copy:
         dest: /tmp/inventario_servidores.csv
         content: |
-          IP,HOSTNAME,SO,DISCO_ROOT,MEM_TOTAL_MB,MEM_USED_MB,MEM_FREE_MB
+          FECHA_EJECUCION,IP,ESTADO,HOSTNAME,SO,DISCO_ROOT,MEM_TOTAL_MB,MEM_USED_MB,MEM_FREE_MB
           {% for host in groups['servidores'] %}
-          {{ host }},{{ hostvars[host]['host_name'] }},{{ hostvars[host]['host_so'] | replace(',', ';') }},{{ hostvars[host]['host_disk'] }},{{ hostvars[host]['mem_total'] }},{{ hostvars[host]['mem_used'] }},{{ hostvars[host]['mem_free'] }}
+          {{ fecha.stdout }},{{ host }},
+          {{ hostvars[host]['estado_host'] | default('UNREACHABLE') }},
+          {{ hostvars[host]['host_name'] | default('N/A') }},
+          {{ hostvars[host]['host_so'] | default('N/A') | replace(',', ';') }},
+          {{ hostvars[host]['host_disk'] | default('N/A') }},
+          {{ hostvars[host]['mem_total'] | default('N/A') }},
+          {{ hostvars[host]['mem_used'] | default('N/A') }},
+          {{ hostvars[host]['mem_free'] | default('N/A') }}
           {% endfor %}
 
     - name: Mostrar ubicacion CSV
       debug:
-        msg: "Archivo generado: /tmp/inventario_servidores.csv"
+        msg: "CSV generado en /tmp/inventario_servidores.csv"
