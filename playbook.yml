@@ -8,7 +8,7 @@
 
     - name: 2. Mostrar información del sistema en pantalla
       debug:
-        msg: "{{ sys_info.stdout_lines }}"
+        msg: "{{ sys_info.stdout }}"
 
     - name: 3. Listar contenido de directorios específicos (ej. /etc y /var/log)
       raw: ls -la /etc /var/log
@@ -16,4 +16,4 @@
 
     - name: 4. Mostrar el contenido de los directorios
       debug:
-        msg: "{{ dir_info.stdout_lines }}"
+        msg: "{{ dir_info.stdout }}"
