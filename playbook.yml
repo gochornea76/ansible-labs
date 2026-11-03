@@ -1,6 +1,5 @@
----
-- hosts: all
+- hosts: servidores
   gather_facts: false
   tasks:
     - name: Ping test directo sin Python
-      raw: echo "PONG - Servidor conectado correctamente"
+      ping:
