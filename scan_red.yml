@@ -4,8 +4,8 @@
 
   vars:
     red: "192.168.250"
-    inicio: 90
-    fin: 130
+    inicio: 1
+    fin: 254
 
   tasks:
 
