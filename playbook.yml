@@ -8,3 +8,6 @@
 
     - name: Date
       raw: date
+
+    - name: Ping Ansible
+      ping:
