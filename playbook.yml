@@ -1,6 +1,7 @@
+---
 - hosts: servidores
   gather_facts: false
 
   tasks:
-    - debug:
-        msg: "Hola"
+    - name: Probar conectividad
+      ping:
