@@ -2,18 +2,5 @@
 - hosts: all
   gather_facts: false
   tasks:
-    - name: 1. Obtener inventario básico del sistema
-      raw: hostname && uname -r && lscpu | grep 'Model name' && free -h
-      register: sys_info
-
-    - name: 2. Mostrar información del sistema en pantalla
-      debug:
-        msg: "{{ sys_info.stdout }}"
-
-    - name: 3. Listar contenido de directorios específicos (ej. /etc y /var/log)
-      raw: ls -la /etc /var/log
-      register: dir_info
-
-    - name: 4. Mostrar el contenido de los directorios
-      debug:
-        msg: "{{ dir_info.stdout }}"
+    - name: Ping test directo sin Python
+      raw: echo "PONG - Servidor conectado correctamente"
