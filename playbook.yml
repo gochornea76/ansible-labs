@@ -1,5 +1,9 @@
 - hosts: servidores
   gather_facts: false
+
   tasks:
-    - name: Prueba sin Python
+    - name: Mostrar hostname
       raw: hostname
+
+    - name: Mostrar fecha
+      raw: date
