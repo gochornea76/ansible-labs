@@ -1,0 +1,55 @@
+---
+- hosts: localhost
+  gather_facts: false
+
+  vars:
+    red: "192.168.250"
+    inicio: 1
+    fin: 254
+
+  tasks:
+
+    - name: Crear CSV
+      copy:
+        dest: /tmp/descubrimiento_red.csv
+        content: |
+          IP,ESTADO_RED,SSH,HOSTNAME
+
+    - name: Escanear red
+      shell: |
+        IP={{ red }}.{{ item }}
+
+        if ping -c 1 -W 1 $IP >/dev/null 2>&1
+        then
+
+          HN=$(ssh \
+            -o BatchMode=yes \
+            -o ConnectTimeout=3 \
+            -o StrictHostKeyChecking=no \
+            root@$IP hostname 2>/dev/null)
+
+          if [ $? -eq 0 ]
+          then
+            echo "$IP,UP,OK,$HN"
+          else
+            echo "$IP,UP,SIN_SSH,N/A"
+          fi
+
+        else
+          echo "$IP,DOWN,N/A,N/A"
+        fi
+      loop: "{{ range(inicio, fin + 1) | list }}"
+      register: resultado
+
+    - name: Generar CSV final
+      copy:
+        dest: /tmp/descubrimiento_red.csv
+        content: |
+          IP,ESTADO_RED,SSH,HOSTNAME
+          {% for r in resultado.results %}
+          {{ r.stdout }}
+          {% endfor %}
+
+    - name: Mostrar resumen
+      debug:
+        msg: "Reporte generado: /tmp/descubrimiento_red.csv"
